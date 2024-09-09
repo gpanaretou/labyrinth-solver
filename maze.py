@@ -1,5 +1,7 @@
 from tkinter import Tk, BOTH, Canvas
 import time
+import random
+import pdb
 
 class Window:
     def __init__(self, width: int, height: int):
@@ -57,6 +59,7 @@ class Cell:
         self._y1 = pointer1.y
         self._x2 = pointer2.x
         self._y2 = pointer2.y
+        self.visited = False
 
         self.__assign_coordinates()
         self._win = window
@@ -76,6 +79,9 @@ class Cell:
 
 
     def draw(self):
+        if self._win is None:
+            return
+        
         self._win.draw_line(
             Line(
                 Pointer(self._x1, self._y1),
@@ -124,7 +130,8 @@ class Maze():
             num_cols: int,
             cell_size_x: int,
             cell_size_y: int,
-            win: Window = None
+            win: Window = None,
+            seed: int = None
     ):
         self.x1 = x1
         self.y1 = y1
@@ -134,7 +141,14 @@ class Maze():
         self.cell_size_y = cell_size_y
         self.win = win
 
+        if seed is not None:
+            self.seed = random.seed(seed)
+        else:
+            self.seed = seed
+
         self._create_cells()
+        self._break_walls_r(0, 0)
+        self._reset_cells_visited()
         self._break_entrance_and_exit()
 
     def _create_cells(self):
@@ -173,3 +187,85 @@ class Maze():
         if self.win is not None:
             entrance.draw()
             exit.draw()
+
+    def _break_walls_r(self, i, j):
+        c = self._cells[i][j]
+        c.visited = True
+
+        while True:
+            possible_directions = []
+
+            if i == 0 or i == len(self._cells)-1:
+                if i == 0:
+                    adj_c = self._cells[i+1][j]
+                    if adj_c.visited is False:
+                        possible_directions.append([i+1, j])
+                else:
+                    adj_c = self._cells[i-1][j]
+                    if adj_c.visited is False:
+                        possible_directions.append([i-1, j])
+            elif i < len(self._cells)-1:
+                adj_c = self._cells[i+1][j]
+                if adj_c.visited is False:
+                    possible_directions.append([i+1, j])
+                adj_c = self._cells[i-1][j]
+                if adj_c.visited is False:
+                    possible_directions.append([i-1, j])
+
+            if j == 0 or j == len(self._cells[0])-1:
+                if j == 0:
+                    adj_c = self._cells[i][j+1]
+                    if adj_c.visited is False:
+                        possible_directions.append([i, j+1])
+                else:
+                    adj_c = self._cells[i][j-1]
+                    if adj_c.visited is False:
+                        possible_directions.append([i, j-1])
+            elif j < len(self._cells)-1:
+                adj_c = self._cells[i][j+1]
+                if adj_c.visited is False:
+                    possible_directions.append([i, j+1])
+                adj_c = self._cells[i][j-1]
+                if adj_c.visited is False:
+                    possible_directions.append([i, j-1])
+
+            if len(possible_directions) == 0:
+                c.draw()
+                return
+
+            direction = random.randrange(0, len(possible_directions))
+
+
+            r = possible_directions[direction]
+            r_cell = self._cells[r[0]][r[1]]
+
+            x_movement = r[0] - i
+            y_movement = r[1] - j
+
+            print("movement->", x_movement, y_movement)
+    
+            if x_movement != 0:
+                if x_movement > 0:
+                    c.has_right_wall = False
+                    r_cell.has_left_wall = False
+                else:
+                    c.has_left_wall = False
+                    r_cell.has_right_wall = False
+            else:
+                if y_movement > 0:
+                    c.has_bottom_wall = False
+                    r_cell.has_top_wall = False
+                else:
+                    c.has_top_wall = False
+                    r_cell.has_bottom_wall = False
+
+
+            c.draw()
+            r_cell.draw()
+
+            self._break_walls_r(r[0], r[1])
+
+    def _reset_cells_visited(self):
+        for col in self._cells:
+            for cell in col:
+                cell.visited = False
