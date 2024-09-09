@@ -76,30 +76,31 @@ class Cell:
 
 
     def draw(self):
-        if self.has_left_wall is True:
-            self._win.draw_line(
-                Line(
-                    Pointer(self._x1, self._y1),
-                    Pointer(self._x1, self._y2))
-            )
-        if self.has_right_wall is True:
-            self._win.draw_line(
-                Line(
-                    Pointer(self._x2, self._y1),
-                    Pointer(self._x2, self._y2))
-            )
-        if self.has_bottom_wall is True:
-            self._win.draw_line(
-                Line(
-                    Pointer(self._x1, self._y2),
-                    Pointer(self._x2, self._y2))
-            )
-        if self.has_top_wall is True:
-            self._win.draw_line(
-                Line(
-                    Pointer(self._x1, self._y1),
-                    Pointer(self._x2, self._y1))
-            )
+        self._win.draw_line(
+            Line(
+                Pointer(self._x1, self._y1),
+                Pointer(self._x1, self._y2)),
+            fill_color=None if self.has_left_wall else "#d9d9d9"
+        )
+        self._win.draw_line(
+            Line(
+                Pointer(self._x2, self._y1),
+                Pointer(self._x2, self._y2)),
+            fill_color=None if self.has_right_wall else "#d9d9d9"
+
+        )
+        self._win.draw_line(
+            Line(
+                Pointer(self._x1, self._y2),
+                Pointer(self._x2, self._y2)),
+            fill_color=None if self.has_bottom_wall else "#d9d9d9"
+        )
+        self._win.draw_line(
+            Line(
+                Pointer(self._x1, self._y1),
+                Pointer(self._x2, self._y1)),
+            fill_color=None if self.has_top_wall else "#d9d9d9"
+        )
         return
 
     def draw_move(self, to_cell, undo=False):
@@ -134,27 +135,41 @@ class Maze():
         self.win = win
 
         self._create_cells()
+        self._break_entrance_and_exit()
 
     def _create_cells(self):
         self._cells = []
         
-        row = []
         for i in range(0, self.num_cols):
             self._cells.append([])
             for j in range(0, self.num_rows):
-                self._draw_cell(i, j)
+                self._cells[i].append(self._draw_cell(i, j))
 
     def _draw_cell(self, i: int, j: int):
+        maze_offset_x = self.cell_size_x
+        maze_offset_y = self.cell_size_y
         c = Cell(
-                    Pointer(i*self.cell_size_x, j*self.cell_size_y), 
-                    Pointer((i+1)*self.cell_size_x, (j+1)*self.cell_size_y),
+                    Pointer((i+1)*self.cell_size_x + maze_offset_x, (j+1)*self.cell_size_y + maze_offset_y), 
+                    Pointer((i+2)*self.cell_size_x + maze_offset_x, (j+2)*self.cell_size_y + maze_offset_y),
                     window=self.win
                 )
-        self._cells[i].append(c)                
         if self.win is not None:
             c.draw()
             self._animate()
 
+        return c
+
     def _animate(self):
         self.win.redraw()
         time.sleep(0.1)
+
+    def _break_entrance_and_exit(self):
+        entrance = self._cells[0][0]
+        entrance.has_left_wall = False
+
+        exit = self._cells[-1][-1]
+        exit.has_right_wall = False
+        
+        if self.win is not None:
+            entrance.draw()
+            exit.draw()
