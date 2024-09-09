@@ -62,7 +62,6 @@ class Cell:
         self._win = window
 
     def __assign_coordinates(self):
-        print(self._y1, self._y2)
         if self._x1 > self._x2:
             self._x1, self._x2 = self._x2, self._x1
         if self._y1 > self._y2:
@@ -138,11 +137,13 @@ class Maze():
 
     def _create_cells(self):
         self._cells = []
+        
         row = []
         for i in range(0, self.num_cols):
+            self._cells.append([])
             for j in range(0, self.num_rows):
-                self._draw_cell(i, j)
-                
+                c = self._draw_cell(i, j)
+                self._cells[i].append(c)                
 
     def _draw_cell(self, i: int, j: int):
         c = Cell(
@@ -150,9 +151,11 @@ class Maze():
                     Pointer((i+1)*self.cell_size_x, (j+1)*self.cell_size_y),
                     window=self.win
                 )
-        
-        c.draw()
-        self._animate()
+        if self.win is True:
+            c.draw()
+            self._animate()
+
+        return c
 
     def _animate(self):
         self.win.redraw()
