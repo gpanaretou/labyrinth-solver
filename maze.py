@@ -144,9 +144,6 @@ class Maze():
             for j in range(0, self.num_rows):
                 self._draw_cell(i, j)
 
-        print(self._cells[0])
-
-
     def _draw_cell(self, i: int, j: int):
         c = Cell(
                     Pointer(i*self.cell_size_x, j*self.cell_size_y), 
@@ -154,10 +151,10 @@ class Maze():
                     window=self.win
                 )
         self._cells[i].append(c)                
-        if self.win is True:
+        if self.win is not None:
             c.draw()
             self._animate()
 
     def _animate(self):
         self.win.redraw()
-        # time.sleep(0.5)
+        time.sleep(0.1)
