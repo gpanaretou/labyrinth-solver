@@ -167,15 +167,14 @@ class Maze():
                     Pointer((i+2)*self.cell_size_x + maze_offset_x, (j+2)*self.cell_size_y + maze_offset_y),
                     window=self.win
                 )
-        if self.win is not None:
-            c.draw()
-            self._animate()
+        c.draw()
+        self._animate()
 
         return c
 
     def _animate(self):
         self.win.redraw()
-        time.sleep(0.1)
+        time.sleep(0.05)
 
     def _break_entrance_and_exit(self):
         entrance = self._cells[0][0]
@@ -184,9 +183,9 @@ class Maze():
         exit = self._cells[-1][-1]
         exit.has_right_wall = False
         
-        if self.win is not None:
-            entrance.draw()
-            exit.draw()
+        entrance.draw()
+        exit.draw()
+        self._animate()
 
     def _break_walls_r(self, i, j):
         c = self._cells[i][j]
@@ -241,8 +240,6 @@ class Maze():
 
             x_movement = r[0] - i
             y_movement = r[1] - j
-
-            print("movement->", x_movement, y_movement)
     
             if x_movement != 0:
                 if x_movement > 0:
@@ -262,6 +259,7 @@ class Maze():
 
             c.draw()
             r_cell.draw()
+            self._animate()
 
             self._break_walls_r(r[0], r[1])
 
