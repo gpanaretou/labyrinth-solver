@@ -151,6 +151,24 @@ class Maze():
         self._reset_cells_visited()
         self._break_entrance_and_exit()
 
+    def solve(self):
+        solved = self._solve_r(i=0, j=0)
+
+    def _solve_r(self, i, j):
+        self._animate()
+        self._cells[i][j].visited = True
+
+        distance_to_end_cell = len(self._cells)-1-i + len(self._cells[0])-1-j
+
+        if distance_to_end_cell < 2:
+            return True
+        
+
+
+            
+
+
+
     def _create_cells(self):
         self._cells = []
         
@@ -191,77 +209,57 @@ class Maze():
         c = self._cells[i][j]
         c.visited = True
 
+        directions = [
+            (1, 0),  # Right
+            (-1, 0), # Left
+            (0, 1),  # Down
+            (0, -1)  # Up
+        ]
+
         while True:
             possible_directions = []
 
-            if i == 0 or i == len(self._cells)-1:
-                if i == 0:
-                    adj_c = self._cells[i+1][j]
-                    if adj_c.visited is False:
-                        possible_directions.append([i+1, j])
-                else:
-                    adj_c = self._cells[i-1][j]
-                    if adj_c.visited is False:
-                        possible_directions.append([i-1, j])
-            elif i < len(self._cells)-1:
-                adj_c = self._cells[i+1][j]
-                if adj_c.visited is False:
-                    possible_directions.append([i+1, j])
-                adj_c = self._cells[i-1][j]
-                if adj_c.visited is False:
-                    possible_directions.append([i-1, j])
+            # Check possible directions to move
+            for di, dj in directions:
+                ni, nj = i + di, j + dj
 
-            if j == 0 or j == len(self._cells[0])-1:
-                if j == 0:
-                    adj_c = self._cells[i][j+1]
-                    if adj_c.visited is False:
-                        possible_directions.append([i, j+1])
-                else:
-                    adj_c = self._cells[i][j-1]
-                    if adj_c.visited is False:
-                        possible_directions.append([i, j-1])
-            elif j < len(self._cells)-1:
-                adj_c = self._cells[i][j+1]
-                if adj_c.visited is False:
-                    possible_directions.append([i, j+1])
-                adj_c = self._cells[i][j-1]
-                if adj_c.visited is False:
-                    possible_directions.append([i, j-1])
+                # Check if the new cell is within bounds
+                if 0 <= ni < len(self._cells) and 0 <= nj < len(self._cells[0]):
+                    adj_c = self._cells[ni][nj]
+                    if not adj_c.visited:
+                        possible_directions.append((ni, nj))
 
-            if len(possible_directions) == 0:
+            # If there are no possible directions, draw the cell and return
+            if not possible_directions:
                 c.draw()
                 return
 
-            direction = random.randrange(0, len(possible_directions))
+            # Choose a random direction and remove the walls between the current and next cell
+            ni, nj = random.choice(possible_directions)
+            r_cell = self._cells[ni][nj]
 
+            # Determine movement direction and remove the appropriate walls
+            if ni > i:  # Right
+                c.has_right_wall = False
+                r_cell.has_left_wall = False
+            elif ni < i:  # Left
+                c.has_left_wall = False
+                r_cell.has_right_wall = False
+            elif nj > j:  # Down
+                c.has_bottom_wall = False
+                r_cell.has_top_wall = False
+            elif nj < j:  # Up
+                c.has_top_wall = False
+                r_cell.has_bottom_wall = False
 
-            r = possible_directions[direction]
-            r_cell = self._cells[r[0]][r[1]]
-
-            x_movement = r[0] - i
-            y_movement = r[1] - j
-    
-            if x_movement != 0:
-                if x_movement > 0:
-                    c.has_right_wall = False
-                    r_cell.has_left_wall = False
-                else:
-                    c.has_left_wall = False
-                    r_cell.has_right_wall = False
-            else:
-                if y_movement > 0:
-                    c.has_bottom_wall = False
-                    r_cell.has_top_wall = False
-                else:
-                    c.has_top_wall = False
-                    r_cell.has_bottom_wall = False
-
-
+            # Draw the cells and animate
             c.draw()
             r_cell.draw()
             self._animate()
 
-            self._break_walls_r(r[0], r[1])
+            # Recursively break walls for the next cell
+            self._break_walls_r(ni, nj)
+
 
     def _reset_cells_visited(self):
         for col in self._cells:
