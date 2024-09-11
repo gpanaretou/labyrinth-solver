@@ -64,6 +64,9 @@ class Cell:
         self.__assign_coordinates()
         self._win = window
 
+    def __repr__(self):
+        return f"({self.get_center().x}, {self.get_center().y})"
+
     def __assign_coordinates(self):
         if self._x1 > self._x2:
             self._x1, self._x2 = self._x2, self._x1
@@ -156,18 +159,65 @@ class Maze():
 
     def _solve_r(self, i, j):
         self._animate()
-        self._cells[i][j].visited = True
+        c = self._cells[i][j]
 
         distance_to_end_cell = len(self._cells)-1-i + len(self._cells[0])-1-j
-
-        if distance_to_end_cell < 2:
-            return True
         
+        directions = [
+            (1, 0),  # Right
+            (-1, 0), # Left
+            (0, 1),  # Down
+            (0, -1)  # Up
+        ]
 
+        possible_directions = []
+        # Check possible directions to move
+        for di, dj in directions:
+            ni, nj = i + di, j + dj
 
-            
+            # Check if the new cell is within bounds
+            if 0 <= ni < len(self._cells) and 0 <= nj < len(self._cells[0]):
+                adj_c = self._cells[ni][nj]
 
+                if ni > i:  # Right
+                    wall_c = c.has_right_wall
+                    wall_adj = adj_c.has_left_wall
+                elif ni < i:  # Left
+                    wall_c = c.has_left_wall
+                    wall_adj = adj_c.has_right_wall
+                elif nj > j:  # Down
+                    wall_c = c.has_bottom_wall
+                    wall_adj = adj_c.has_top_wall
+                elif nj < j:  # Up
+                    wall_c = c.has_top_wall 
+                    wall_adj = adj_c.has_bottom_wall
 
+                has_wall_between = wall_c and wall_adj
+
+                if has_wall_between:
+                    continue
+
+                if adj_c.visited == False:
+                    c.visited = True
+                    if distance_to_end_cell < 2 and adj_c == self._cells[-1][-1]:
+                        c.draw_move(adj_c)
+                        self._animate()
+                        print("found exit!")
+                        return True
+
+                    print(f"Cell {i, j} to -> {ni, nj}.")
+                    c.draw_move(adj_c)
+                    self._animate()
+                    boolean = self._solve_r(ni, nj)
+                    
+                    if boolean is True:
+                        return True
+                    else:
+                        print(f"undo Cell {i, j} to -> {ni, nj}.")
+                        c.draw_move(adj_c, undo=True)
+                        self._animate()
+                
+        return False
 
     def _create_cells(self):
         self._cells = []
@@ -190,9 +240,9 @@ class Maze():
 
         return c
 
-    def _animate(self):
+    def _animate(self, sleep_interval=0.02):
         self.win.redraw()
-        time.sleep(0.05)
+        time.sleep(sleep_interval)
 
     def _break_entrance_and_exit(self):
         entrance = self._cells[0][0]
